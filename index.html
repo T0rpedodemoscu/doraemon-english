@@ -23,16 +23,31 @@
       width: 100%;
       max-width: 460px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      position: relative;
     }
     .top-bar {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-weight: bold;
       color: #0369a1;
       margin-bottom: 15px;
       background: #e0f2fe;
-      padding: 10px;
+      padding: 10px 14px;
       border-radius: 10px;
+    }
+    .audio-btn {
+      background: #38bdf8;
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .dialogue-box {
       background: #fff7ed;
@@ -103,7 +118,8 @@
 <div class="card" id="quiz">
   <div class="top-bar">
     <span>🏆 Dorayakis: <span id="score">0</span></span>
-    <span>Frase: <span id="num">1</span>/<span id="total">10</span></span>
+    <span>Frase: <span id="num">1</span>/<span id="total">15</span></span>
+    <button class="audio-btn" id="music-toggle" onclick="toggleMusic()">🔊</button>
   </div>
 
   <div class="dialogue-box" id="dialogue">🐱 Doraemon: ¡Preparando el entrenamiento!</div>
@@ -118,6 +134,60 @@
 </div>
 
 <script>
+// Pistas de audio (música alegre de fondo y efectos de acierto/fallo mediante Web Audio API)
+var audioCtx = null;
+var musicPlaying = false;
+var bgMusic = new Audio('https://actions.google.com/sounds/v1/ambiences/outdoor_park.ogg'); // Música instrumental suave
+bgMusic.loop = true;
+bgMusic.volume = 0.2;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (!musicPlaying) {
+    bgMusic.play().catch(function(){});
+    musicPlaying = true;
+  }
+}
+
+function toggleMusic() {
+  var btn = document.getElementById('music-toggle');
+  if (bgMusic.paused) {
+    bgMusic.play();
+    btn.innerText = '🔊';
+  } else {
+    bgMusic.pause();
+    btn.innerText = '🔇';
+  }
+}
+
+function playSound(isCorrect) {
+  if (!audioCtx) return;
+  var osc = audioCtx.createOscillator();
+  var gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (isCorrect) {
+    // Sonido alegre agudo
+    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  } else {
+    // Sonido grave de fallo
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+    osc.frequency.setValueAtTime(164.81, audioCtx.currentTime + 0.15); // E3
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.4);
+  }
+}
+
 // Banco de datos para crear cientos de combinaciones
 var subjects = [
   { name: "Nobita", aux: "is", char: "🤓 Nobita" },
@@ -156,7 +226,6 @@ var index = 0;
 var score = 0;
 var answered = false;
 
-// Función para generar y mezclar un paquete de preguntas totalmente aleatorio
 function generateRandomQuestions() {
   var generated = [];
   
@@ -176,11 +245,11 @@ function generateRandomQuestions() {
         var wrong1 = (subj.aux === "is") ? "are " + verb.ing : "is " + verb.ing;
         var wrong2 = subj.aux + " " + verb.base;
         if (verb.type === "double" || verb.type === "e_drop") {
-          wrong2 = subj.aux + " " + verb.base + "ing"; // Error típico como 'danceing' o 'swiming'
+          wrong2 = subj.aux + " " + verb.base + "ing";
         }
 
         var opts = [correctOpt, wrong1, wrong2];
-        opts.sort(function() { return Math.random() - 0.5; }); // Mezclar las opciones A, B, C
+        opts.sort(function() { return Math.random() - 0.5; });
 
         var tip = "💡 Usamos '" + subj.aux + "' para '" + subj.name + "' + verbo en -ing.";
         if (verb.type === "e_drop") tip += " Los verbos en -e la pierden (" + verb.ing + ").";
@@ -197,10 +266,7 @@ function generateRandomQuestions() {
     }
   }
 
-  // Mezclar todas las preguntas posibles al azar
   generated.sort(function() { return Math.random() - 0.5; });
-  
-  // Tomamos una ronda de 15 preguntas distintas para cada partida
   return generated.slice(0, 15);
 }
 
@@ -238,6 +304,7 @@ function showQuestion() {
 function check(optIndex) {
   if (answered) return;
   answered = true;
+  initAudio(); // Inicia la música con el primer toque del jugador
   
   var q = questions[index];
   var btns = document.querySelectorAll('.btn');
@@ -246,9 +313,11 @@ function check(optIndex) {
     btns[optIndex].classList.add('correct');
     score += 10;
     document.getElementById('score').innerText = score;
+    playSound(true);
   } else {
     btns[optIndex].classList.add('incorrect');
     btns[q.correct].classList.add('correct');
+    playSound(false);
   }
   
   for (var i = 0; i < btns.length; i++) {
@@ -276,7 +345,6 @@ function nextQ() {
   }
 }
 
-// Iniciar partida
 startQuiz();
 </script>
 
