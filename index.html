@@ -7,30 +7,57 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #0284c7;
-      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      font-family: 'Comic Sans MS', 'Chalkboard SE', Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       padding: 15px;
+      overflow-x: hidden;
     }
     .card {
       background: white;
-      border-radius: 20px;
-      padding: 20px;
+      border-radius: 24px;
+      padding: 24px;
       width: 100%;
       max-width: 500px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
       position: relative;
+      animation: fadeIn 0.4s ease-out;
+      border: 4px solid #38bdf8;
     }
+
+    /* Animaciones CSS */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-18px); }
+      60% { transform: translateY(-9px); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+
+    .bounce-anim { animation: bounce 0.6s ease; }
+    .shake-anim { animation: shake 0.4s ease; }
+
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #e0f2fe;
       padding: 10px 15px;
-      border-radius: 12px;
+      border-radius: 16px;
       font-weight: bold;
       color: #0369a1;
       margin-bottom: 15px;
@@ -41,86 +68,127 @@
       border: none;
       color: white;
       border-radius: 50%;
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       cursor: pointer;
       font-size: 18px;
+      box-shadow: 0 4px 10px rgba(56, 189, 248, 0.4);
+      transition: transform 0.2s;
     }
-    .dialogue {
+    .audio-btn:active { transform: scale(0.9); }
+
+    .character-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       background: #fff7ed;
       border: 2px solid #fdba74;
-      padding: 10px;
-      border-radius: 10px;
+      padding: 12px;
+      border-radius: 18px;
       margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(253, 186, 116, 0.2);
+    }
+    .char-avatar {
+      font-size: 42px;
+      line-height: 1;
+      animation: float 3s ease-in-out infinite;
+      user-select: none;
+    }
+    .dialogue {
       font-size: 14px;
       color: #9a3412;
       font-weight: bold;
     }
+
     .badge {
       display: inline-block;
       background: #e0e7ff;
       color: #3730a3;
-      padding: 4px 10px;
-      border-radius: 12px;
+      padding: 5px 12px;
+      border-radius: 14px;
       font-size: 12px;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .question-box {
       font-size: 18px;
       font-weight: bold;
       text-align: center;
       background: #f8fafc;
-      border: 2px dashed #38bdf8;
-      padding: 15px;
-      border-radius: 12px;
+      border: 3px dashed #38bdf8;
+      padding: 16px;
+      border-radius: 16px;
       margin-bottom: 15px;
       color: #0f172a;
     }
+
     .options { display: flex; flex-direction: column; gap: 10px; }
     .btn {
-      padding: 12px;
+      padding: 14px;
       border: 2px solid #cbd5e1;
       background: white;
-      border-radius: 10px;
+      border-radius: 14px;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       text-align: left;
       color: #1e293b;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    .btn.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; }
-    .btn.incorrect { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+    .btn:hover:not(:disabled) {
+      border-color: #38bdf8;
+      background: #f0f9ff;
+      transform: translateY(-2px);
+    }
+    .btn.correct {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #15803d;
+      animation: bounce 0.5s ease;
+    }
+    .btn.incorrect {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #b91c1c;
+      animation: shake 0.4s ease;
+    }
+
     .text-input {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       font-size: 16px;
       border: 2px solid #cbd5e1;
-      border-radius: 10px;
+      border-radius: 14px;
       margin-bottom: 10px;
       font-weight: bold;
       text-align: center;
+      transition: border-color 0.2s;
     }
     .submit-btn {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       background: #0284c7;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 14px;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+      transition: transform 0.2s, background-color 0.2s;
     }
+    .submit-btn:active { transform: scale(0.97); }
+
     .word-pool, .word-target {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 10px;
-      min-height: 50px;
-      padding: 8px;
-      border-radius: 10px;
+      min-height: 55px;
+      padding: 10px;
+      border-radius: 14px;
     }
     .word-target { background: #f1f5f9; border: 2px dashed #38bdf8; align-items: center; }
     .word-pool { background: #fafafa; border: 1px solid #e2e8f0; }
@@ -129,33 +197,55 @@
       border: 2px solid #0284c7;
       color: #0284c7;
       padding: 8px 14px;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
       user-select: none;
+      transition: transform 0.15s, background-color 0.15s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
+    .word-chip:active { transform: scale(0.9); }
+
     .tip {
       margin-top: 15px;
-      padding: 10px;
+      padding: 12px;
       background: #f0fdf4;
-      border-left: 4px solid #22c55e;
+      border-left: 5px solid #22c55e;
+      border-radius: 10px;
       font-size: 13px;
       display: none;
       color: #166534;
+      animation: fadeIn 0.3s ease;
     }
     .next-btn {
       margin-top: 15px;
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       background: #f43f5e;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 14px;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 17px;
       cursor: pointer;
       display: none;
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
+      animation: bounce 0.6s ease;
     }
+
+    /* Lluvia de Confeti / Dorayakis */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      font-size: 24px;
+      z-index: 9999;
+      animation: fall 2s linear forwards;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
     .ranking-table {
       width: 100%;
       border-collapse: collapse;
@@ -166,10 +256,7 @@
       padding: 8px;
       text-align: center;
     }
-    .ranking-table th {
-      background: #38bdf8;
-      color: white;
-    }
+    .ranking-table th { background: #38bdf8; color: white; }
   </style>
 </head>
 <body>
@@ -177,12 +264,15 @@
 <div class="card" id="quiz">
   <div class="top-bar">
     <span>🏆 Dorayakis: <span id="score">0</span></span>
-    <span>📍 Nivel: <span id="level-num">1</span>/3</span>
-    <span>Frase: <span id="num">1</span>/<span id="total">12</span></span>
+    <span>📍 Nivel: <span id="level-num">1</span>/4</span>
+    <span>Frase: <span id="num">1</span>/<span id="total">16</span></span>
     <button class="audio-btn" id="music-toggle" onclick="toggleMusic()">🔊</button>
   </div>
 
-  <div class="dialogue" id="dialogue">🐱 Doraemon: ¡Empieza el reto de Present Continuous!</div>
+  <div class="character-container" id="char-box">
+    <div class="char-avatar" id="avatar">🐱</div>
+    <div class="dialogue" id="dialogue">🐱 Doraemon: ¡Entrenamiento completo de Present Continuous!</div>
+  </div>
 
   <span class="badge" id="type-badge">Ejercicio</span>
 
@@ -255,26 +345,61 @@ function playVictoryFanfare() {
   });
 }
 
-// --- EJERCICIOS CLASIFICADOS POR NIVEL DE DIFICULTAD ---
-var level1 = [ // Elección múltiple básica
-  { type: "choice", q: "Elige la opción correcta:", opts: ["I am watching TV", "I do watching TV", "I watching TV"], correct: 0, tip: "I + am + watching", char: "🤓 Nobita" },
-  { type: "choice", q: "Elige la opción correcta:", opts: ["She is playing tennis", "She are playing tennis", "She am playing tennis"], correct: 0, tip: "She + is", char: "👧 Shizuka" },
-  { type: "choice", q: "Elige la opción correcta:", opts: ["We are learning English", "We is learning English", "We am learning English"], correct: 0, tip: "We + are", char: "🐱 Doraemon" },
-  { type: "choice", q: "Cambia a NEGATIVA: 'She is working'", opts: ["She isn't working", "She is working not", "She don't working"], correct: 0, tip: "is -> isn't (is not)", char: "🐱 Doraemon" }
+// --- EFECTOS VISUALES Y ANIMACIONES ---
+function triggerConfetti() {
+  var items = ['🍩', '🌟', '✨', '🎈', '🎉'];
+  for (var i = 0; i < 15; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    p.innerText = items[Math.floor(Math.random() * items.length)];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+    document.body.appendChild(p);
+    setTimeout(function(elem) { elem.remove(); }, 3000, p);
+  }
+}
+
+function triggerCardShake() {
+  var card = document.getElementById('quiz');
+  card.classList.remove('shake-anim');
+  void card.offsetWidth; // Force reflow
+  card.classList.add('shake-anim');
+}
+
+function triggerCharBounce() {
+  var avatar = document.getElementById('avatar');
+  avatar.classList.remove('bounce-anim');
+  void avatar.offsetWidth;
+  avatar.classList.add('bounce-anim');
+}
+
+// --- EJERCICIOS CLASIFICADOS ---
+var level1 = [
+  { type: "choice", q: "Elige la opción correcta (AHORA):", opts: ["She is reading a book right now", "She reads a book right now", "She reading a book right now"], correct: 0, tip: "💡 Acciones del momento: Subject + is/are/am + verb-ing", char: "👧 Shizuka", emoji: "👧" },
+  { type: "fill", q: "They ___ (play) football at the moment.", ans: ["are playing"], tip: "💡 At the moment -> They + are + playing", char: "🦊 Suneo", emoji: "🦊" },
+  { type: "fill", q: "Listen! Gigante ___ (sing) a song.", ans: ["is singing"], tip: "💡 ¡Escucha! Ocurre ahora -> Gigante (he) + is + singing", char: "🎤 Gigante", emoji: "🎤" },
+  { type: "choice", q: "Elige la opción correcta:", opts: ["I am doing my homework now", "I do doing my homework now", "I am do my homework now"], correct: 0, tip: "💡 I + am + doing", char: "🤓 Nobita", emoji: "🤓" }
 ];
 
-var level2 = [ // Rellenar huecos y spelling (-e, CVC)
-  { type: "fill", q: "She ___ (read) a book right now.", ans: ["is reading"], tip: "She + is + reading", char: "👧 Shizuka" },
-  { type: "fill", q: "They ___ (play) football in the park.", ans: ["are playing"], tip: "They + are + playing", char: "🦊 Suneo" },
-  { type: "fill", q: "I ___ (not watch) TV at the moment.", ans: ["am not watching", "aren't watching"], tip: "I + am not + watching", char: "🤓 Nobita" },
-  { type: "fill", q: "We ___ (study) for the test.", ans: ["are studying"], tip: "We + are + studying", char: "🐱 Doraemon" }
+var level2 = [
+  { type: "fill", q: "My friends ___ (travel) to Italy this week.", ans: ["are traveling", "are travelling"], tip: "💡 Temporary situation (this week): My friends + are + traveling", char: "👧 Shizuka", emoji: "👧" },
+  { type: "fill", q: "We ___ (stay) with our grandparents this week.", ans: ["are staying"], tip: "💡 Temporary situation: We + are + staying", char: "🐱 Doraemon", emoji: "🐱" },
+  { type: "fill", q: "He ___ (work) on a school project this month.", ans: ["is working"], tip: "💡 Temporary situation (this month): He + is + working", char: "🤓 Nobita", emoji: "🤓" },
+  { type: "choice", q: "Situación temporal (este año):", opts: ["They are living in Madrid this year", "They lives in Madrid this year", "They are live in Madrid this year"], correct: 0, tip: "💡 Present Continuous se usa para situaciones temporales.", char: "🎀 Dorami", emoji: "🎀" }
 ];
 
-var level3 = [ // Preguntas y Ordenar frases
-  { type: "fill", q: "Haz la PREGUNTA: 'You are reading'", ans: ["Are you reading?", "Are you reading"], tip: "Invierte: Are + you + reading?", char: "👧 Shizuka" },
-  { type: "fill", q: "Haz la PREGUNTA: 'She is cooking'", ans: ["Is she cooking?", "Is she cooking"], tip: "Invierte: Is + she + cooking?", char: "🎀 Dorami" },
-  { type: "order", words: ["is", "she", "music", "listening", "to"], ans: "she is listening to music", tip: "Sujeto + is + verb-ing + complemento", char: "👧 Shizuka" },
-  { type: "order", words: ["are", "they", "a movie", "watching"], ans: "they are watching a movie", tip: "Sujeto + are + verb-ing", char: "🦊 Suneo" }
+var level3 = [
+  { type: "fill", q: "We ___ (meet) our friends tomorrow.", ans: ["are meeting"], tip: "💡 Future plan (tomorrow): We + are + meeting", char: "🦊 Suneo", emoji: "🦊" },
+  { type: "fill", q: "She ___ (visit) her aunt next weekend.", ans: ["is visiting"], tip: "💡 Future plan (next weekend): She + is + visiting", char: "👧 Shizuka", emoji: "👧" },
+  { type: "choice", q: "Plan de futuro (este sábado):", opts: ["They are playing a football match on Saturday", "They play a football match on Saturday", "They are play a football match on Saturday"], correct: 0, tip: "💡 Usamos Present Continuous para planes fijos de futuro.", char: "🎤 Gigante", emoji: "🎤" },
+  { type: "fill", q: "I ___ (take) English classes tomorrow.", ans: ["am taking"], tip: "💡 Future plan: I + am + taking (se elimina la -e de take)", char: "🐱 Doraemon", emoji: "🐱" }
+];
+
+var level4 = [
+  { type: "choice", q: "Cambia a NEGATIVA: 'She is working'", opts: ["She isn't working", "She is working not", "She don't working"], correct: 0, tip: "💡 Negativa: is -> isn't / are -> aren't", char: "🐱 Doraemon", emoji: "🐱" },
+  { type: "fill", q: "Haz la PREGUNTA: 'You are reading'", ans: ["Are you reading?", "Are you reading"], tip: "💡 Pregunta: Invierte el orden -> Are you reading?", char: "👧 Shizuka", emoji: "👧" },
+  { type: "order", words: ["is", "she", "music", "listening", "to"], ans: "she is listening to music", tip: "💡 Sujeto + is + verb-ing + complemento", char: "👧 Shizuka", emoji: "👧" },
+  { type: "order", words: ["are", "they", "a movie", "watching"], ans: "they are watching a movie", tip: "💡 Sujeto + are + verb-ing", char: "🦊 Suneo", emoji: "🦊" }
 ];
 
 var currentList = [];
@@ -284,7 +409,7 @@ var currentLevel = 1;
 var answered = false;
 
 function startQuiz() {
-  currentList = level1.concat(level2).concat(level3);
+  currentList = level1.concat(level2).concat(level3).concat(level4);
   index = 0;
   score = 0;
   document.getElementById('total').innerText = currentList.length;
@@ -295,14 +420,15 @@ function showQuestion() {
   answered = false;
   var ex = currentList[index];
 
-  // Actualizar nivel
   if (index < 4) currentLevel = 1;
   else if (index < 8) currentLevel = 2;
-  else currentLevel = 3;
+  else if (index < 12) currentLevel = 3;
+  else currentLevel = 4;
 
   document.getElementById('level-num').innerText = currentLevel;
   document.getElementById('num').innerText = index + 1;
   document.getElementById('score').innerText = score;
+  document.getElementById('avatar').innerText = ex.emoji || "🐱";
   document.getElementById('dialogue').innerText = ex.char + " (Nivel " + currentLevel + "): ¡A resolver!";
   document.getElementById('q-text').innerText = ex.q || "Ordena la siguiente frase:";
   document.getElementById('tip').style.display = 'none';
@@ -313,12 +439,15 @@ function showQuestion() {
 
   var badge = document.getElementById('type-badge');
 
+  if (currentLevel === 1) badge.innerText = "⚡ USO 1: Acciones AHORA MISMO";
+  else if (currentLevel === 2) badge.innerText = "⏳ USO 2: Situaciones TEMPORALES";
+  else if (currentLevel === 3) badge.innerText = "📅 USO 3: Planes de FUTURO";
+  else badge.innerText = "🏆 RETO FINAL: Preguntas y Negativas";
+
   if (ex.type === "fill") {
-    badge.innerText = "✍️ Nivel " + currentLevel + ": Escribe el verbo";
     area.innerHTML = '<input type="text" id="text-ans" class="text-input" placeholder="Escribe tu respuesta aquí..." autocomplete="off">' +
                      '<button class="submit-btn" onclick="checkFill()">Comprobar</button>';
   } else if (ex.type === "choice") {
-    badge.innerText = "🔘 Nivel " + currentLevel + ": Elige la correcta";
     var optsDiv = document.createElement('div');
     optsDiv.className = 'options';
     ex.opts.forEach(function(opt, idx) {
@@ -330,8 +459,6 @@ function showQuestion() {
     });
     area.appendChild(optsDiv);
   } else if (ex.type === "order") {
-    badge.innerText = "🧩 Nivel " + currentLevel + ": Ordena la frase";
-    
     var target = document.createElement('div');
     target.className = 'word-target';
     target.id = 'word-target';
@@ -384,10 +511,13 @@ function checkChoice(selected) {
     btns[selected].classList.add('correct');
     score += 10;
     playDoraemonSound();
+    triggerConfetti();
+    triggerCharBounce();
   } else {
     btns[selected].classList.add('incorrect');
     btns[ex.correct].classList.add('correct');
     playWrongSound();
+    triggerCardShake();
   }
   finishQuestion(ex.tip);
 }
@@ -407,10 +537,13 @@ function checkFill() {
     document.getElementById('text-ans').style.background = '#dcfce7';
     score += 10;
     playDoraemonSound();
+    triggerConfetti();
+    triggerCharBounce();
   } else {
     document.getElementById('text-ans').style.borderColor = '#ef4444';
     document.getElementById('text-ans').style.background = '#fee2e2';
     playWrongSound();
+    triggerCardShake();
   }
   finishQuestion(ex.tip + " (Correcto: " + ex.ans[0] + ")");
 }
@@ -436,10 +569,13 @@ function checkOrder() {
     target.style.borderColor = '#22c55e';
     score += 10;
     playDoraemonSound();
+    triggerConfetti();
+    triggerCharBounce();
   } else {
     target.style.background = '#fee2e2';
     target.style.borderColor = '#ef4444';
     playWrongSound();
+    triggerCardShake();
   }
   finishQuestion(ex.tip + " (Correcto: " + ex.ans + ")");
 }
@@ -461,18 +597,21 @@ function nextQ() {
   }
 }
 
-// --- SISTEMA DE RANKING Y GUARDADO LOCAL ---
+// --- RANKING ---
 function showEndScreen() {
   var maxScore = currentList.length * 10;
   var isPleno = (score === maxScore);
 
-  if (isPleno) playVictoryFanfare();
+  if (isPleno) {
+    playVictoryFanfare();
+    triggerConfetti();
+  }
 
   var html = '<div style="text-align:center;">' +
     '<h2>' + (isPleno ? '🌟 ¡PLENO ABSOLUTO! 🌟' : '🏆 ¡Ronda Finalizada!') + '</h2>' +
     '<p style="margin: 10px 0; font-size:18px;">Conseguiste <b>' + score + '</b> de ' + maxScore + ' Dorayakis.</p>' +
     '<div style="margin:15px 0;">' +
-      '<input type="text" id="player-name" class="text-input" placeholder="Escribe tu Nombre o Nick..." maxlength="12">' +
+      '<input type="text" id="player-name" class="text-input" placeholder="Escribe tu Nombre..." maxlength="12">' +
       '<button class="submit-btn" onclick="saveScore()">Guardar Puntuación 💾</button>' +
     '</div>' +
     '<div id="ranking-box"></div>' +
@@ -489,7 +628,7 @@ function saveScore() {
   
   ranking.push({ name: name, score: score, date: new Date().toLocaleDateString() });
   ranking.sort(function(a,b){ return b.score - a.score; });
-  ranking = ranking.slice(0, 5); // Guardar el Top 5
+  ranking = ranking.slice(0, 5);
 
   localStorage.setItem('doraemon_ranking', JSON.stringify(ranking));
   renderRanking();
