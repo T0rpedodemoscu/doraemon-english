@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doraemon English Quiz</title>
+  <style>
+    body {
+      background: #0284c7;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 15px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      color: #0369a1;
+      margin-bottom: 15px;
+      background: #e0f2fe;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .dialogue-box {
+      background: #fff7ed;
+      border: 2px solid #fdba74;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #9a3412;
+      font-weight: bold;
+    }
+    .question {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      background: #f8fafc;
+      border: 2px dashed #38bdf8;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn {
+      padding: 12px;
+      border: 2px solid #cbd5e1;
+      background: white;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: left;
+    }
+    .btn.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; }
+    .btn.incorrect { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+    .tip {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      font-size: 13px;
+      display: none;
+    }
+    .next-btn {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: #f43f5e;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="quiz">
+  <div class="top-bar">
+    <span>🏆 Dorayakis: <span id="score">0</span></span>
+    <span>Frase: <span id="num">1</span>/<span id="total">0</span></span>
+  </div>
+
+  <div class="dialogue-box" id="dialogue">🐱 Doraemon: Cargar preguntas...</div>
+
+  <div class="question" id="q-text">Cargando preguntas desde el archivo...</div>
+
+  <div class="options" id="opts"></div>
+
+  <div class="tip" id="tip"></div>
+
+  <button class="next-btn" id="next" onclick="nextQ()">¡Siguiente Frase! 🚀</button>
+</div>
+
+<script>
+var questions = [];
+var index = 0;
+var score = 0;
+var answered = false;
+
+// Cargar preguntas desde el archivo preguntas.json
+fetch('preguntas.json')
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(data) {
+    questions = data;
+    document.getElementById('total').innerText = questions.length;
+    showQuestion();
+  })
+  .catch(function(error) {
+    document.getElementById('q-text').innerText = '⚠️ Abre este archivo usando un servidor local (Live Server) o subiéndolo a internet para poder leer preguntas.json.';
+  });
+
+function showQuestion() {
+  if (questions.length === 0) return;
+  answered = false;
+  var q = questions[index];
+  
+  document.getElementById('num').innerText = index + 1;
+  document.getElementById('score').innerText = score;
+  document.getElementById('dialogue').innerText = q.char + ": Elige la opción correcta.";
+  document.getElementById('q-text').innerText = q.q;
+  document.getElementById('tip').style.display = 'none';
+  document.getElementById('next').style.display = 'none';
+  
+  var container = document.getElementById('opts');
+  container.innerHTML = '';
+  
+  for (var i = 0; i < q.opts.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.innerText = q.opts[i];
+    btn.setAttribute('onclick', 'check(' + i + ')');
+    container.appendChild(btn);
+  }
+}
+
+function check(optIndex) {
+  if (answered) return;
+  answered = true;
+  
+  var q = questions[index];
+  var btns = document.querySelectorAll('.btn');
+  
+  if (optIndex === q.correct) {
+    btns[optIndex].classList.add('correct');
+    score += 10;
+    document.getElementById('score').innerText = score;
+  } else {
+    btns[optIndex].classList.add('incorrect');
+    btns[q.correct].classList.add('correct');
+  }
+  
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].disabled = true;
+  }
+  
+  var tipBox = document.getElementById('tip');
+  tipBox.innerText = q.tip;
+  tipBox.style.display = 'block';
+  
+  document.getElementById('next').style.display = 'block';
+}
+
+function nextQ() {
+  index++;
+  if (index < questions.length) {
+    showQuestion();
+  } else {
+    document.getElementById('quiz').innerHTML = 
+      '<div style="text-align:center;">' +
+      '<h2>🏆 ¡Has terminado todas las frases!</h2>' +
+      '<p style="margin: 15px 0; font-size:18px;">Conseguiste <b>' + score + '</b> Dorayakis.</p>' +
+      '<button class="next-btn" style="display:block" onclick="location.reload()">🔄 Jugar otra vez</button>' +
+      '</div>';
+  }
+}
+</script>
+
+</body>
+</html>
