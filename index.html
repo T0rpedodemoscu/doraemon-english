@@ -176,62 +176,56 @@
 </div>
 
 <script>
-// --- SINTETIZADOR DE AUDIO PUNTUAL ---
-var audioCtx = null;
+// --- SISTEMA DE REPRODUCCIÓN AUDIO DE DORAEMON ---
+var doraemonSong = new Audio('https://ia800108.us.archive.org/27/items/doraemon-opening-es/doraemon-opening.mp3');
 var isMuted = false;
-
-function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-}
+var songTimeout = null;
 
 function toggleMusic() {
   isMuted = !isMuted;
   document.getElementById('music-toggle').innerText = isMuted ? '🔇' : '🔊';
-}
-
-function playNote(freq, duration, type, delay) {
-  if (isMuted || !audioCtx) return;
-  delay = delay || 0;
-  setTimeout(function() {
-    try {
-      var osc = audioCtx.createOscillator();
-      var gain = audioCtx.createGain();
-      osc.type = type || 'square';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    } catch(e){}
-  }, delay);
-}
-
-function playSFX(type) {
-  initAudio();
-  if (isMuted || !audioCtx) return;
-
-  if (type === 'correct') {
-    // Frase musical alegre estilo Mario al acertar
-    var notes = [523, 659, 783, 1046, 783, 1046];
-    var times = [0, 100, 200, 300, 450, 600];
-    notes.forEach(function(freq, i) {
-      playNote(freq, 0.15, 'triangle', times[i]);
-    });
-  } else if (type === 'wrong') {
-    // Sonido suave de fallo
-    playNote(220, 0.15, 'sawtooth', 0);
-    playNote(164, 0.25, 'sawtooth', 120);
-  } else if (type === 'victory') {
-    // Música triunfal de fin de ronda
-    var winNotes = [523, 659, 783, 1046, 0, 783, 1046, 1318];
-    winNotes.forEach(function(f, i){
-      if (f > 0) playNote(f, 0.25, 'triangle', i * 140);
-    });
+  if (isMuted) {
+    doraemonSong.pause();
   }
+}
+
+function playDoraemonTheme(duration) {
+  if (isMuted) return;
+  
+  // Parar cualquier reproducción previa
+  doraemonSong.pause();
+  clearTimeout(songTimeout);
+  
+  doraemonSong.currentTime = 0; // Empieza la canción de Doraemon
+  doraemonSong.play().catch(function(){});
+
+  // Si se especifica duración, detener tras esos segundos
+  if (duration) {
+    songTimeout = setTimeout(function() {
+      doraemonSong.pause();
+    }, duration);
+  }
+}
+
+function playWrongSound() {
+  if (isMuted) return;
+  doraemonSong.pause();
+  clearTimeout(songTimeout);
+  
+  // Tono grave simple para el fallo
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, ctx.currentTime);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch(e){}
 }
 
 // --- EJERCICIOS DEL CUADERNO REAL ---
@@ -365,11 +359,11 @@ function checkChoice(selected) {
   if (selected === ex.correct) {
     btns[selected].classList.add('correct');
     score += 10;
-    playSFX('correct');
+    playDoraemonTheme(4000); // Suena 4 segundos de la canción de Doraemon al acertar
   } else {
     btns[selected].classList.add('incorrect');
     btns[ex.correct].classList.add('correct');
-    playSFX('wrong');
+    playWrongSound();
   }
   finishQuestion(ex.tip);
 }
@@ -388,11 +382,11 @@ function checkFill() {
     document.getElementById('text-ans').style.borderColor = '#22c55e';
     document.getElementById('text-ans').style.background = '#dcfce7';
     score += 10;
-    playSFX('correct');
+    playDoraemonTheme(4000); // Suena 4 segundos de Doraemon
   } else {
     document.getElementById('text-ans').style.borderColor = '#ef4444';
     document.getElementById('text-ans').style.background = '#fee2e2';
-    playSFX('wrong');
+    playWrongSound();
   }
   finishQuestion(ex.tip + " (Correcto: " + ex.ans[0] + ")");
 }
@@ -406,9 +400,9 @@ function checkOrder() {
 
   if (userSentence === ex.ans.toLowerCase()) {
     score += 10;
-    playSFX('correct');
+    playDoraemonTheme(4000); // Suena 4 segundos de Doraemon
   } else {
-    playSFX('wrong');
+    playWrongSound();
   }
   finishQuestion(ex.tip + " (Correcto: " + ex.ans + ")");
 }
@@ -422,6 +416,7 @@ function finishQuestion(tipText) {
 }
 
 function nextQ() {
+  doraemonSong.pause(); // Detener música al pasar a la siguiente pregunta
   index++;
   if (index < currentList.length) {
     showQuestion();
@@ -429,7 +424,9 @@ function nextQ() {
     var maxScore = currentList.length * 10;
     var isPleno = (score === maxScore);
 
-    if (isPleno) playSFX('victory');
+    if (isPleno) {
+      playDoraemonTheme(0); // Suena la canción entera en el pleno
+    }
 
     document.getElementById('quiz').innerHTML = 
       '<div style="text-align:center; padding: 20px;">' +
