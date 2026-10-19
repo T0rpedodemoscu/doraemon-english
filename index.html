@@ -34,6 +34,7 @@
       font-weight: bold;
       color: #0369a1;
       margin-bottom: 15px;
+      font-size: 14px;
     }
     .audio-btn {
       background: #38bdf8;
@@ -133,7 +134,6 @@
       cursor: pointer;
       user-select: none;
     }
-    .word-chip:active { transform: scale(0.95); }
     .tip {
       margin-top: 15px;
       padding: 10px;
@@ -156,6 +156,20 @@
       cursor: pointer;
       display: none;
     }
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    .ranking-table th, .ranking-table td {
+      border: 1px solid #e2e8f0;
+      padding: 8px;
+      text-align: center;
+    }
+    .ranking-table th {
+      background: #38bdf8;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -163,11 +177,12 @@
 <div class="card" id="quiz">
   <div class="top-bar">
     <span>🏆 Dorayakis: <span id="score">0</span></span>
-    <span>Frase: <span id="num">1</span>/<span id="total">10</span></span>
+    <span>📍 Nivel: <span id="level-num">1</span>/3</span>
+    <span>Frase: <span id="num">1</span>/<span id="total">12</span></span>
     <button class="audio-btn" id="music-toggle" onclick="toggleMusic()">🔊</button>
   </div>
 
-  <div class="dialogue" id="dialogue">🐱 Doraemon: ¡Aprende Present Continuous para el examen!</div>
+  <div class="dialogue" id="dialogue">🐱 Doraemon: ¡Empieza el reto de Present Continuous!</div>
 
   <span class="badge" id="type-badge">Ejercicio</span>
 
@@ -181,7 +196,7 @@
 </div>
 
 <script>
-// --- MOTOR DE AUDIO NATIVO Y GARANTIZADO ---
+// --- MOTOR DE AUDIO ---
 var audioCtx = null;
 var isMuted = false;
 
@@ -220,7 +235,6 @@ function playNote(freq, duration, type, delay) {
   }, delay);
 }
 
-// Melodía reconocible de Doraemon ("Ojalá mis sueños se hicieran realidad...")
 function playDoraemonSound() {
   var notes = [523, 659, 783, 880, 783, 659, 523, 659, 783, 1046];
   var times = [0, 150, 300, 450, 600, 750, 900, 1050, 1200, 1400];
@@ -241,47 +255,36 @@ function playVictoryFanfare() {
   });
 }
 
-// --- EJERCICIOS DEL CUADERNO REAL ---
-var exercises = [
-  // 1. Fill in the blanks
-  { type: "fill", q: "She ___ (read) a book right now.", ans: ["is reading"], tip: "She + is + reading", char: "👧 Shizuka" },
-  { type: "fill", q: "They ___ (play) football in the park.", ans: ["are playing"], tip: "They + are + playing", char: "🦊 Suneo" },
-  { type: "fill", q: "I ___ (not watch) TV at the moment.", ans: ["am not watching", "aren't watching", "a'm not watching"], tip: "I + am not + watching", char: "🤓 Nobita" },
-  { type: "fill", q: "We ___ (study) for the test.", ans: ["are studying"], tip: "We + are + studying", char: "🐱 Doraemon" },
-  { type: "fill", q: "He ___ (cook) dinner in the kitchen.", ans: ["is cooking"], tip: "He + is + cooking", char: "🎤 Gigante" },
-  { type: "fill", q: "My friends ___ (travel) to Italy this week.", ans: ["are traveling", "are travelling"], tip: "My friends (they) + are + traveling", char: "👧 Shizuka" },
-  { type: "fill", q: "___ you ___ (listen) to me?", ans: ["Are listening", "Are / listening"], tip: "Pregunta: Are + you + listening?", char: "🐱 Doraemon" },
-  { type: "fill", q: "The dog ___ (sleep) on the sofa.", ans: ["is sleeping"], tip: "The dog (it) + is + sleeping", char: "🎀 Dorami" },
-
-  // 2. Put words in order
-  { type: "order", words: ["is", "she", "music", "listening", "to"], ans: "she is listening to music", tip: "Sujeto + is + verb-ing + complemento", char: "👧 Shizuka" },
-  { type: "order", words: ["are", "they", "a movie", "watching"], ans: "they are watching a movie", tip: "Sujeto + are + verb-ing", char: "🦊 Suneo" },
-  { type: "order", words: ["am", "I", "homework", "doing", "my"], ans: "i am doing my homework", tip: "I + am + doing...", char: "🤓 Nobita" },
-  { type: "order", words: ["is", "he", "running", "in the park"], ans: "he is running in the park", tip: "He + is + running (CVC doubles n)", char: "🎤 Gigante" },
-
-  // 3. Make negative sentences
-  { type: "choice", q: "Cambia a NEGATIVA: 'She is working'", opts: ["She isn't working", "She is working not", "She don't working"], correct: 0, tip: "is -> isn't (is not)", char: "🐱 Doraemon" },
-  { type: "choice", q: "Cambia a NEGATIVA: 'They are playing'", opts: ["They aren't playing", "They isn't playing", "They not playing"], correct: 0, tip: "are -> aren't (are not)", char: "🦊 Suneo" },
-  { type: "choice", q: "Cambia a NEGATIVA: 'I am studying'", opts: ["I am not studying", "I aren't studying", "I isn't studying"], correct: 0, tip: "I am -> I am not", char: "🤓 Nobita" },
-
-  // 4. Make questions
-  { type: "fill", q: "Haz la PREGUNTA: 'You are reading'", ans: ["Are you reading?", "Are you reading"], tip: "Invierte el orden: Are + you + reading?", char: "👧 Shizuka" },
-  { type: "fill", q: "Haz la PREGUNTA: 'She is cooking'", ans: ["Is she cooking?", "Is she cooking"], tip: "Invierte: Is + she + cooking?", char: "🎀 Dorami" },
-  { type: "fill", q: "Haz la PREGUNTA: 'They are sleeping'", ans: ["Are they sleeping?", "Are they sleeping"], tip: "Invierte: Are + they + sleeping?", char: "🎤 Gigante" },
-
-  // 5. Choose the correct option
+// --- EJERCICIOS CLASIFICADOS POR NIVEL DE DIFICULTAD ---
+var level1 = [ // Elección múltiple básica
   { type: "choice", q: "Elige la opción correcta:", opts: ["I am watching TV", "I do watching TV", "I watching TV"], correct: 0, tip: "I + am + watching", char: "🤓 Nobita" },
   { type: "choice", q: "Elige la opción correcta:", opts: ["She is playing tennis", "She are playing tennis", "She am playing tennis"], correct: 0, tip: "She + is", char: "👧 Shizuka" },
-  { type: "choice", q: "Elige la opción correcta:", opts: ["We are learning English", "We is learning English", "We am learning English"], correct: 0, tip: "We + are", char: "🐱 Doraemon" }
+  { type: "choice", q: "Elige la opción correcta:", opts: ["We are learning English", "We is learning English", "We am learning English"], correct: 0, tip: "We + are", char: "🐱 Doraemon" },
+  { type: "choice", q: "Cambia a NEGATIVA: 'She is working'", opts: ["She isn't working", "She is working not", "She don't working"], correct: 0, tip: "is -> isn't (is not)", char: "🐱 Doraemon" }
+];
+
+var level2 = [ // Rellenar huecos y spelling (-e, CVC)
+  { type: "fill", q: "She ___ (read) a book right now.", ans: ["is reading"], tip: "She + is + reading", char: "👧 Shizuka" },
+  { type: "fill", q: "They ___ (play) football in the park.", ans: ["are playing"], tip: "They + are + playing", char: "🦊 Suneo" },
+  { type: "fill", q: "I ___ (not watch) TV at the moment.", ans: ["am not watching", "aren't watching"], tip: "I + am not + watching", char: "🤓 Nobita" },
+  { type: "fill", q: "We ___ (study) for the test.", ans: ["are studying"], tip: "We + are + studying", char: "🐱 Doraemon" }
+];
+
+var level3 = [ // Preguntas y Ordenar frases
+  { type: "fill", q: "Haz la PREGUNTA: 'You are reading'", ans: ["Are you reading?", "Are you reading"], tip: "Invierte: Are + you + reading?", char: "👧 Shizuka" },
+  { type: "fill", q: "Haz la PREGUNTA: 'She is cooking'", ans: ["Is she cooking?", "Is she cooking"], tip: "Invierte: Is + she + cooking?", char: "🎀 Dorami" },
+  { type: "order", words: ["is", "she", "music", "listening", "to"], ans: "she is listening to music", tip: "Sujeto + is + verb-ing + complemento", char: "👧 Shizuka" },
+  { type: "order", words: ["are", "they", "a movie", "watching"], ans: "they are watching a movie", tip: "Sujeto + are + verb-ing", char: "🦊 Suneo" }
 ];
 
 var currentList = [];
 var index = 0;
 var score = 0;
+var currentLevel = 1;
 var answered = false;
 
 function startQuiz() {
-  currentList = exercises.sort(function() { return Math.random() - 0.5; }).slice(0, 10);
+  currentList = level1.concat(level2).concat(level3);
   index = 0;
   score = 0;
   document.getElementById('total').innerText = currentList.length;
@@ -292,9 +295,15 @@ function showQuestion() {
   answered = false;
   var ex = currentList[index];
 
+  // Actualizar nivel
+  if (index < 4) currentLevel = 1;
+  else if (index < 8) currentLevel = 2;
+  else currentLevel = 3;
+
+  document.getElementById('level-num').innerText = currentLevel;
   document.getElementById('num').innerText = index + 1;
   document.getElementById('score').innerText = score;
-  document.getElementById('dialogue').innerText = ex.char + ": ¡A resolver!";
+  document.getElementById('dialogue').innerText = ex.char + " (Nivel " + currentLevel + "): ¡A resolver!";
   document.getElementById('q-text').innerText = ex.q || "Ordena la siguiente frase:";
   document.getElementById('tip').style.display = 'none';
   document.getElementById('next').style.display = 'none';
@@ -305,11 +314,11 @@ function showQuestion() {
   var badge = document.getElementById('type-badge');
 
   if (ex.type === "fill") {
-    badge.innerText = "✍️ Escribe el verbo correcto";
+    badge.innerText = "✍️ Nivel " + currentLevel + ": Escribe el verbo";
     area.innerHTML = '<input type="text" id="text-ans" class="text-input" placeholder="Escribe tu respuesta aquí..." autocomplete="off">' +
                      '<button class="submit-btn" onclick="checkFill()">Comprobar</button>';
   } else if (ex.type === "choice") {
-    badge.innerText = "🔘 Selecciona la opción correcta";
+    badge.innerText = "🔘 Nivel " + currentLevel + ": Elige la correcta";
     var optsDiv = document.createElement('div');
     optsDiv.className = 'options';
     ex.opts.forEach(function(opt, idx) {
@@ -321,7 +330,7 @@ function showQuestion() {
     });
     area.appendChild(optsDiv);
   } else if (ex.type === "order") {
-    badge.innerText = "🧩 Toca las palabras para ordenar";
+    badge.innerText = "🧩 Nivel " + currentLevel + ": Ordena la frase";
     
     var target = document.createElement('div');
     target.className = 'word-target';
@@ -448,19 +457,60 @@ function nextQ() {
   if (index < currentList.length) {
     showQuestion();
   } else {
-    var maxScore = currentList.length * 10;
-    var isPleno = (score === maxScore);
-
-    if (isPleno) playVictoryFanfare();
-
-    document.getElementById('quiz').innerHTML = 
-      '<div style="text-align:center; padding: 20px;">' +
-      '<h2>' + (isPleno ? '🌟 ¡PLENO ABSOLUTO! 🌟' : '🏆 ¡Ronda Finalizada!') + '</h2>' +
-      '<p style="margin: 15px 0; font-size:18px;">Conseguiste <b>' + score + '</b> de ' + maxScore + ' Dorayakis.</p>' +
-      '<p>' + (isPleno ? '¡Eres un maestro del Present Continuous! 🍩🎉' : '¡Sigue practicando para el pleno!') + '</p>' +
-      '<button class="next-btn" style="display:block; margin-top:20px;" onclick="location.reload()">🔄 Jugar Otra Vez</button>' +
-      '</div>';
+    showEndScreen();
   }
+}
+
+// --- SISTEMA DE RANKING Y GUARDADO LOCAL ---
+function showEndScreen() {
+  var maxScore = currentList.length * 10;
+  var isPleno = (score === maxScore);
+
+  if (isPleno) playVictoryFanfare();
+
+  var html = '<div style="text-align:center;">' +
+    '<h2>' + (isPleno ? '🌟 ¡PLENO ABSOLUTO! 🌟' : '🏆 ¡Ronda Finalizada!') + '</h2>' +
+    '<p style="margin: 10px 0; font-size:18px;">Conseguiste <b>' + score + '</b> de ' + maxScore + ' Dorayakis.</p>' +
+    '<div style="margin:15px 0;">' +
+      '<input type="text" id="player-name" class="text-input" placeholder="Escribe tu Nombre o Nick..." maxlength="12">' +
+      '<button class="submit-btn" onclick="saveScore()">Guardar Puntuación 💾</button>' +
+    '</div>' +
+    '<div id="ranking-box"></div>' +
+    '<button class="next-btn" style="display:block; margin-top:15px;" onclick="location.reload()">🔄 Volver a Jugar</button>' +
+  '</div>';
+
+  document.getElementById('quiz').innerHTML = html;
+  renderRanking();
+}
+
+function saveScore() {
+  var name = document.getElementById('player-name').value.trim() || "Nobita";
+  var ranking = JSON.parse(localStorage.getItem('doraemon_ranking') || '[]');
+  
+  ranking.push({ name: name, score: score, date: new Date().toLocaleDateString() });
+  ranking.sort(function(a,b){ return b.score - a.score; });
+  ranking = ranking.slice(0, 5); // Guardar el Top 5
+
+  localStorage.setItem('doraemon_ranking', JSON.stringify(ranking));
+  renderRanking();
+}
+
+function renderRanking() {
+  var ranking = JSON.parse(localStorage.getItem('doraemon_ranking') || '[]');
+  var box = document.getElementById('ranking-box');
+  if (!box) return;
+
+  if (ranking.length === 0) {
+    box.innerHTML = '<p style="color:#64748b; font-size:14px;">Aún no hay puntuaciones guardadas.</p>';
+    return;
+  }
+
+  var html = '<h3 style="margin-top:15px;">🏅 Top 5 Clasificación</h3><table class="ranking-table"><tr><th>Pos</th><th>Nombre</th><th>Puntos</th></tr>';
+  ranking.forEach(function(item, i) {
+    html += '<tr><td>#' + (i+1) + '</td><td>' + item.name + '</td><td><b>' + item.score + '</b></td></tr>';
+  });
+  html += '</table>';
+  box.innerHTML = html;
 }
 
 startQuiz();
