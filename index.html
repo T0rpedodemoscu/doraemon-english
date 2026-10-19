@@ -28,7 +28,6 @@
       border: 4px solid #38bdf8;
     }
 
-    /* Animaciones CSS */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(15px) scale(0.97); }
       to { opacity: 1; transform: translateY(0) scale(1); }
@@ -233,7 +232,6 @@
       animation: bounce 0.6s ease;
     }
 
-    /* Lluvia de Confeti / Dorayakis */
     .particle {
       position: fixed;
       pointer-events: none;
@@ -345,7 +343,7 @@ function playVictoryFanfare() {
   });
 }
 
-// --- EFECTOS VISUALES Y ANIMACIONES ---
+// --- EFECTOS VISUALES ---
 function triggerConfetti() {
   var items = ['🍩', '🌟', '✨', '🎈', '🎉'];
   for (var i = 0; i < 15; i++) {
@@ -362,7 +360,7 @@ function triggerConfetti() {
 function triggerCardShake() {
   var card = document.getElementById('quiz');
   card.classList.remove('shake-anim');
-  void card.offsetWidth; // Force reflow
+  void card.offsetWidth;
   card.classList.add('shake-anim');
 }
 
@@ -373,34 +371,212 @@ function triggerCharBounce() {
   avatar.classList.add('bounce-anim');
 }
 
-// --- EJERCICIOS CLASIFICADOS ---
-var level1 = [
-  { type: "choice", q: "Elige la opción correcta (AHORA):", opts: ["She is reading a book right now", "She reads a book right now", "She reading a book right now"], correct: 0, tip: "💡 Acciones del momento: Subject + is/are/am + verb-ing", char: "👧 Shizuka", emoji: "👧" },
-  { type: "fill", q: "They ___ (play) football at the moment.", ans: ["are playing"], tip: "💡 At the moment -> They + are + playing", char: "🦊 Suneo", emoji: "🦊" },
-  { type: "fill", q: "Listen! Gigante ___ (sing) a song.", ans: ["is singing"], tip: "💡 ¡Escucha! Ocurre ahora -> Gigante (he) + is + singing", char: "🎤 Gigante", emoji: "🎤" },
-  { type: "choice", q: "Elige la opción correcta:", opts: ["I am doing my homework now", "I do doing my homework now", "I am do my homework now"], correct: 0, tip: "💡 I + am + doing", char: "🤓 Nobita", emoji: "🤓" }
+// --- BANCO DE DATOS PARA GENERAR PREGUNTAS DINÁMICAS Y DINÁMICAS ---
+var subjects = [
+  { name: "She", aux: "is", char: "👧 Shizuka", emoji: "👧" },
+  { name: "He", aux: "is", char: "🎤 Gigante", emoji: "🎤" },
+  { name: "They", aux: "are", char: "🦊 Suneo", emoji: "🦊" },
+  { name: "We", aux: "are", char: "🐱 Doraemon", emoji: "🐱" },
+  { name: "I", aux: "am", char: "🤓 Nobita", emoji: "🤓" },
+  { name: "My friends", aux: "are", char: "👧 Shizuka", emoji: "👧" },
+  { name: "The dog", aux: "is", char: "🎀 Dorami", emoji: "🎀" }
 ];
 
-var level2 = [
-  { type: "fill", q: "My friends ___ (travel) to Italy this week.", ans: ["are traveling", "are travelling"], tip: "💡 Temporary situation (this week): My friends + are + traveling", char: "👧 Shizuka", emoji: "👧" },
-  { type: "fill", q: "We ___ (stay) with our grandparents this week.", ans: ["are staying"], tip: "💡 Temporary situation: We + are + staying", char: "🐱 Doraemon", emoji: "🐱" },
-  { type: "fill", q: "He ___ (work) on a school project this month.", ans: ["is working"], tip: "💡 Temporary situation (this month): He + is + working", char: "🤓 Nobita", emoji: "🤓" },
-  { type: "choice", q: "Situación temporal (este año):", opts: ["They are living in Madrid this year", "They lives in Madrid this year", "They are live in Madrid this year"], correct: 0, tip: "💡 Present Continuous se usa para situaciones temporales.", char: "🎀 Dorami", emoji: "🎀" }
+var verbsNow = [
+  { base: "read", ing: "reading", obj: "a book" },
+  { base: "play", ing: "playing", obj: "football" },
+  { base: "watch", ing: "watching", obj: "TV" },
+  { base: "sing", ing: "singing", obj: "a song" },
+  { base: "cook", ing: "cooking", obj: "dinner" },
+  { base: "sleep", ing: "sleeping", obj: "on the sofa" }
 ];
 
-var level3 = [
-  { type: "fill", q: "We ___ (meet) our friends tomorrow.", ans: ["are meeting"], tip: "💡 Future plan (tomorrow): We + are + meeting", char: "🦊 Suneo", emoji: "🦊" },
-  { type: "fill", q: "She ___ (visit) her aunt next weekend.", ans: ["is visiting"], tip: "💡 Future plan (next weekend): She + is + visiting", char: "👧 Shizuka", emoji: "👧" },
-  { type: "choice", q: "Plan de futuro (este sábado):", opts: ["They are playing a football match on Saturday", "They play a football match on Saturday", "They are play a football match on Saturday"], correct: 0, tip: "💡 Usamos Present Continuous para planes fijos de futuro.", char: "🎤 Gigante", emoji: "🎤" },
-  { type: "fill", q: "I ___ (take) English classes tomorrow.", ans: ["am taking"], tip: "💡 Future plan: I + am + taking (se elimina la -e de take)", char: "🐱 Doraemon", emoji: "🐱" }
+var verbsTemp = [
+  { base: "travel", ing: "traveling", obj: "to Italy" },
+  { base: "stay", ing: "staying", obj: "with grandparents" },
+  { base: "work", ing: "working", obj: "on a school project" },
+  { base: "live", ing: "living", obj: "in Madrid" },
+  { base: "study", ing: "studying", obj: "for the English exam" }
 ];
 
-var level4 = [
-  { type: "choice", q: "Cambia a NEGATIVA: 'She is working'", opts: ["She isn't working", "She is working not", "She don't working"], correct: 0, tip: "💡 Negativa: is -> isn't / are -> aren't", char: "🐱 Doraemon", emoji: "🐱" },
-  { type: "fill", q: "Haz la PREGUNTA: 'You are reading'", ans: ["Are you reading?", "Are you reading"], tip: "💡 Pregunta: Invierte el orden -> Are you reading?", char: "👧 Shizuka", emoji: "👧" },
-  { type: "order", words: ["is", "she", "music", "listening", "to"], ans: "she is listening to music", tip: "💡 Sujeto + is + verb-ing + complemento", char: "👧 Shizuka", emoji: "👧" },
-  { type: "order", words: ["are", "they", "a movie", "watching"], ans: "they are watching a movie", tip: "💡 Sujeto + are + verb-ing", char: "🦊 Suneo", emoji: "🦊" }
+var verbsFuture = [
+  { base: "meet", ing: "meeting", obj: "friends" },
+  { base: "visit", ing: "visiting", obj: "her aunt" },
+  { base: "play", ing: "playing", obj: "a football match" },
+  { base: "take", ing: "taking", obj: "English classes" },
+  { base: "go to", ing: "going to", obj: "the cinema" }
 ];
+
+function getRandomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// GENERADOR DE CADA NIVEL (GARANTIZA FRASES DIFERENTES CADA PARTIDA)
+function generateLevel1() { // ACCIONES AHORA
+  var list = [];
+  var timeWords = ["right now", "at the moment", "now"];
+  for (var i = 0; i < 4; i++) {
+    var s = getRandomItem(subjects);
+    var v = getRandomItem(verbsNow);
+    var t = getRandomItem(timeWords);
+
+    if (i % 2 === 0) {
+      var correctStr = s.name + " " + s.aux + " " + v.ing + " " + v.obj + " " + t;
+      var wrong1 = s.name + " " + (s.aux === "is" ? "are" : "is") + " " + v.ing + " " + v.obj + " " + t;
+      var wrong2 = s.name + " " + v.base + "s " + v.obj + " " + t;
+      var opts = [correctStr, wrong1, wrong2].sort(function(){ return Math.random() - 0.5; });
+      list.push({
+        type: "choice",
+        q: "Elige la opción correcta (AHORA):",
+        opts: opts,
+        correct: opts.indexOf(correctStr),
+        tip: "💡 Acciones del momento: " + s.name + " + " + s.aux + " + " + v.ing,
+        char: s.char,
+        emoji: s.emoji
+      });
+    } else {
+      list.push({
+        type: "fill",
+        q: s.name + " ___ (" + v.base + ") " + v.obj + " " + t + ".",
+        ans: [s.aux + " " + v.ing],
+        tip: "💡 " + s.name + " + " + s.aux + " + " + v.ing,
+        char: s.char,
+        emoji: s.emoji
+      });
+    }
+  }
+  return list;
+}
+
+function generateLevel2() { // TEMPORALES
+  var list = [];
+  var tempWords = ["this week", "this month", "this year"];
+  for (var i = 0; i < 4; i++) {
+    var s = getRandomItem(subjects);
+    var v = getRandomItem(verbsTemp);
+    var t = getRandomItem(tempWords);
+
+    if (i % 2 === 0) {
+      list.push({
+        type: "fill",
+        q: s.name + " ___ (" + v.base + ") " + v.obj + " " + t + ".",
+        ans: [s.aux + " " + v.ing],
+        tip: "💡 Situación temporal (" + t + "): " + s.name + " + " + s.aux + " + " + v.ing,
+        char: s.char,
+        emoji: s.emoji
+      });
+    } else {
+      var correctStr = s.name + " " + s.aux + " " + v.ing + " " + v.obj + " " + t;
+      var wrong1 = s.name + " " + v.base + " " + v.obj + " " + t;
+      var wrong2 = s.name + " " + s.aux + " " + v.base + " " + v.obj + " " + t;
+      var opts = [correctStr, wrong1, wrong2].sort(function(){ return Math.random() - 0.5; });
+      list.push({
+        type: "choice",
+        q: "Situación temporal (" + t + "):",
+        opts: opts,
+        correct: opts.indexOf(correctStr),
+        tip: "💡 Usa Present Continuous para situaciones temporales.",
+        char: s.char,
+        emoji: s.emoji
+      });
+    }
+  }
+  return list;
+}
+
+function generateLevel3() { // PLANES DE FUTURO
+  var list = [];
+  var futWords = ["tomorrow", "next weekend", "on Saturday", "this evening"];
+  for (var i = 0; i < 4; i++) {
+    var s = getRandomItem(subjects);
+    var v = getRandomItem(verbsFuture);
+    var t = getRandomItem(futWords);
+
+    if (i % 2 === 0) {
+      list.push({
+        type: "fill",
+        q: s.name + " ___ (" + v.base + ") " + v.obj + " " + t + ".",
+        ans: [s.aux + " " + v.ing],
+        tip: "💡 Plan de futuro (" + t + "): " + s.name + " + " + s.aux + " + " + v.ing,
+        char: s.char,
+        emoji: s.emoji
+      });
+    } else {
+      var correctStr = s.name + " " + s.aux + " " + v.ing + " " + v.obj + " " + t;
+      var wrong1 = s.name + " " + v.base + " " + v.obj + " " + t;
+      var wrong2 = s.name + " " + (s.aux === "is" ? "are" : "is") + " " + v.ing + " " + v.obj + " " + t;
+      var opts = [correctStr, wrong1, wrong2].sort(function(){ return Math.random() - 0.5; });
+      list.push({
+        type: "choice",
+        q: "Plan de futuro (" + t + "):",
+        opts: opts,
+        correct: opts.indexOf(correctStr),
+        tip: "💡 Usamos Present Continuous para planes fijos de futuro.",
+        char: s.char,
+        emoji: s.emoji
+      });
+    }
+  }
+  return list;
+}
+
+function generateLevel4() { // RETO MÁXIMO (NEGATIVAS, PREGUNTAS Y ORDENAR)
+  var list = [];
+  var s = getRandomItem(subjects);
+  var v = getRandomItem(verbsNow);
+
+  // 1. Negativa
+  var negAux = s.aux === "is" ? "isn't" : (s.aux === "are" ? "aren't" : "am not");
+  var negCorrect = s.name + " " + negAux + " " + v.ing;
+  var negWrong1 = s.name + " " + s.aux + " " + v.ing + " not";
+  var negWrong2 = s.name + " don't " + v.ing;
+  var optsNeg = [negCorrect, negWrong1, negWrong2].sort(function(){ return Math.random() - 0.5; });
+
+  list.push({
+    type: "choice",
+    q: "Cambia a NEGATIVA: '" + s.name + " " + s.aux + " " + v.ing + "'",
+    opts: optsNeg,
+    correct: optsNeg.indexOf(negCorrect),
+    tip: "💡 Negativa: " + s.aux + " -> " + negAux,
+    char: s.char,
+    emoji: s.emoji
+  });
+
+  // 2. Pregunta
+  var qSubj = (s.name === "I") ? "you" : s.name;
+  var qAux = (s.name === "I") ? "Are" : (s.aux === "is" ? "Is" : "Are");
+  list.push({
+    type: "fill",
+    q: "Haz la PREGUNTA: '" + qSubj + " " + (qAux.toLowerCase()) + " " + v.ing + "'",
+    ans: [qAux + " " + qSubj + " " + v.ing + "?", qAux + " " + qSubj + " " + v.ing],
+    tip: "💡 Pregunta: Invierte el orden -> " + qAux + " " + qSubj + " " + v.ing + "?",
+    char: s.char,
+    emoji: s.emoji
+  });
+
+  // 3 y 4. Ordenar frases
+  list.push({
+    type: "order",
+    words: [s.aux.toLowerCase(), s.name.toLowerCase(), v.obj.split(' ')[0], v.ing],
+    ans: s.name.toLowerCase() + " " + s.aux.toLowerCase() + " " + v.ing + " " + v.obj.split(' ')[0],
+    tip: "💡 Sujeto + " + s.aux + " + verb-ing + complemento",
+    char: s.char,
+    emoji: s.emoji
+  });
+
+  var s2 = getRandomItem(subjects);
+  var v2 = getRandomItem(verbsTemp);
+  list.push({
+    type: "order",
+    words: [s2.aux.toLowerCase(), s2.name.toLowerCase(), v2.ing, "music"],
+    ans: s2.name.toLowerCase() + " " + s2.aux.toLowerCase() + " " + v2.ing + " music",
+    tip: "💡 Sujeto + " + s2.aux + " + verb-ing + complemento",
+    char: s2.char,
+    emoji: s2.emoji
+  });
+
+  return list;
+}
 
 var currentList = [];
 var index = 0;
@@ -409,7 +585,8 @@ var currentLevel = 1;
 var answered = false;
 
 function startQuiz() {
-  currentList = level1.concat(level2).concat(level3).concat(level4);
+  // Generar nuevas frases únicas en cada partida
+  currentList = generateLevel1().concat(generateLevel2()).concat(generateLevel3()).concat(generateLevel4());
   index = 0;
   score = 0;
   document.getElementById('total').innerText = currentList.length;
@@ -597,7 +774,7 @@ function nextQ() {
   }
 }
 
-// --- RANKING ---
+// --- RANKING Y GUARDADO ---
 function showEndScreen() {
   var maxScore = currentList.length * 10;
   var isPleno = (score === maxScore);
@@ -615,11 +792,15 @@ function showEndScreen() {
       '<button class="submit-btn" onclick="saveScore()">Guardar Puntuación 💾</button>' +
     '</div>' +
     '<div id="ranking-box"></div>' +
-    '<button class="next-btn" style="display:block; margin-top:15px;" onclick="location.reload()">🔄 Volver a Jugar</button>' +
+    '<button class="next-btn" style="display:block; margin-top:15px;" onclick="restartGame()">🔄 Jugar Otra Vez (Frases Nuevas)</button>' +
   '</div>';
 
   document.getElementById('quiz').innerHTML = html;
   renderRanking();
+}
+
+function restartGame() {
+  location.reload();
 }
 
 function saveScore() {
