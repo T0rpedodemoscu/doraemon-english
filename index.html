@@ -110,25 +110,30 @@
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 10px;
     }
     .word-pool, .word-target {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 12px;
-      min-height: 45px;
+      margin-bottom: 10px;
+      min-height: 50px;
       padding: 8px;
       border-radius: 10px;
     }
-    .word-target { background: #f1f5f9; border: 2px dashed #94a3b8; }
+    .word-target { background: #f1f5f9; border: 2px dashed #38bdf8; align-items: center; }
+    .word-pool { background: #fafafa; border: 1px solid #e2e8f0; }
     .word-chip {
-      background: #e2e8f0;
-      border: 2px solid #94a3b8;
-      padding: 6px 12px;
+      background: #ffffff;
+      border: 2px solid #0284c7;
+      color: #0284c7;
+      padding: 8px 14px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
+      user-select: none;
     }
+    .word-chip:active { transform: scale(0.95); }
     .tip {
       margin-top: 15px;
       padding: 10px;
@@ -176,56 +181,64 @@
 </div>
 
 <script>
-// --- SISTEMA DE REPRODUCCIÓN AUDIO DE DORAEMON ---
-var doraemonSong = new Audio('https://ia800108.us.archive.org/27/items/doraemon-opening-es/doraemon-opening.mp3');
+// --- MOTOR DE AUDIO NATIVO Y GARANTIZADO ---
+var audioCtx = null;
 var isMuted = false;
-var songTimeout = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
 
 function toggleMusic() {
   isMuted = !isMuted;
   document.getElementById('music-toggle').innerText = isMuted ? '🔇' : '🔊';
-  if (isMuted) {
-    doraemonSong.pause();
-  }
 }
 
-function playDoraemonTheme(duration) {
+function playNote(freq, duration, type, delay) {
   if (isMuted) return;
-  
-  // Parar cualquier reproducción previa
-  doraemonSong.pause();
-  clearTimeout(songTimeout);
-  
-  doraemonSong.currentTime = 0; // Empieza la canción de Doraemon
-  doraemonSong.play().catch(function(){});
+  initAudio();
+  delay = delay || 0;
 
-  // Si se especifica duración, detener tras esos segundos
-  if (duration) {
-    songTimeout = setTimeout(function() {
-      doraemonSong.pause();
-    }, duration);
-  }
+  setTimeout(function() {
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'triangle';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e){}
+  }, delay);
+}
+
+// Melodía reconocible de Doraemon ("Ojalá mis sueños se hicieran realidad...")
+function playDoraemonSound() {
+  var notes = [523, 659, 783, 880, 783, 659, 523, 659, 783, 1046];
+  var times = [0, 150, 300, 450, 600, 750, 900, 1050, 1200, 1400];
+  notes.forEach(function(freq, i) {
+    playNote(freq, 0.2, 'triangle', times[i]);
+  });
 }
 
 function playWrongSound() {
-  if (isMuted) return;
-  doraemonSong.pause();
-  clearTimeout(songTimeout);
-  
-  // Tono grave simple para el fallo
-  try {
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, ctx.currentTime);
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
-  } catch(e){}
+  playNote(220, 0.15, 'sawtooth', 0);
+  playNote(165, 0.25, 'sawtooth', 120);
+}
+
+function playVictoryFanfare() {
+  var winNotes = [523, 659, 783, 1046, 0, 783, 1046, 1318];
+  winNotes.forEach(function(f, i){
+    if (f > 0) playNote(f, 0.25, 'triangle', i * 140);
+  });
 }
 
 // --- EJERCICIOS DEL CUADERNO REAL ---
@@ -266,7 +279,6 @@ var currentList = [];
 var index = 0;
 var score = 0;
 var answered = false;
-var userOrder = [];
 
 function startQuiz() {
   currentList = exercises.sort(function() { return Math.random() - 0.5; }).slice(0, 10);
@@ -278,13 +290,12 @@ function startQuiz() {
 
 function showQuestion() {
   answered = false;
-  userOrder = [];
   var ex = currentList[index];
 
   document.getElementById('num').innerText = index + 1;
   document.getElementById('score').innerText = score;
   document.getElementById('dialogue').innerText = ex.char + ": ¡A resolver!";
-  document.getElementById('q-text').innerText = ex.q || "Ordena las palabras:";
+  document.getElementById('q-text').innerText = ex.q || "Ordena la siguiente frase:";
   document.getElementById('tip').style.display = 'none';
   document.getElementById('next').style.display = 'none';
 
@@ -295,7 +306,7 @@ function showQuestion() {
 
   if (ex.type === "fill") {
     badge.innerText = "✍️ Escribe el verbo correcto";
-    area.innerHTML = '<input type="text" id="text-ans" class="text-input" placeholder="Escribe aquí tu respuesta..." autocomplete="off">' +
+    area.innerHTML = '<input type="text" id="text-ans" class="text-input" placeholder="Escribe tu respuesta aquí..." autocomplete="off">' +
                      '<button class="submit-btn" onclick="checkFill()">Comprobar</button>';
   } else if (ex.type === "choice") {
     badge.innerText = "🔘 Selecciona la opción correcta";
@@ -310,7 +321,8 @@ function showQuestion() {
     });
     area.appendChild(optsDiv);
   } else if (ex.type === "order") {
-    badge.innerText = "🧩 Ordena la frase";
+    badge.innerText = "🧩 Toca las palabras para ordenar";
+    
     var target = document.createElement('div');
     target.className = 'word-target';
     target.id = 'word-target';
@@ -324,28 +336,31 @@ function showQuestion() {
       var chip = document.createElement('div');
       chip.className = 'word-chip';
       chip.innerText = w;
-      chip.onclick = function() { toggleWord(chip, w); };
+      chip.onclick = function() { toggleWord(chip); };
       pool.appendChild(chip);
     });
 
     area.appendChild(target);
     area.appendChild(pool);
-    area.innerHTML += '<button class="submit-btn" onclick="checkOrder()">Comprobar Orden</button>';
+
+    var checkBtn = document.createElement('button');
+    checkBtn.className = 'submit-btn';
+    checkBtn.innerText = 'Comprobar Orden';
+    checkBtn.onclick = checkOrder;
+    area.appendChild(checkBtn);
   }
 }
 
-function toggleWord(chip, word) {
+function toggleWord(chip) {
   if (answered) return;
+  initAudio();
   var target = document.getElementById('word-target');
   var pool = document.getElementById('word-pool');
 
   if (chip.parentElement === pool) {
     target.appendChild(chip);
-    userOrder.push(word);
   } else {
     pool.appendChild(chip);
-    var idx = userOrder.indexOf(word);
-    if (idx > -1) userOrder.splice(idx, 1);
   }
 }
 
@@ -359,7 +374,7 @@ function checkChoice(selected) {
   if (selected === ex.correct) {
     btns[selected].classList.add('correct');
     score += 10;
-    playDoraemonTheme(4000); // Suena 4 segundos de la canción de Doraemon al acertar
+    playDoraemonSound();
   } else {
     btns[selected].classList.add('incorrect');
     btns[ex.correct].classList.add('correct');
@@ -382,7 +397,7 @@ function checkFill() {
     document.getElementById('text-ans').style.borderColor = '#22c55e';
     document.getElementById('text-ans').style.background = '#dcfce7';
     score += 10;
-    playDoraemonTheme(4000); // Suena 4 segundos de Doraemon
+    playDoraemonSound();
   } else {
     document.getElementById('text-ans').style.borderColor = '#ef4444';
     document.getElementById('text-ans').style.background = '#fee2e2';
@@ -393,15 +408,28 @@ function checkFill() {
 
 function checkOrder() {
   if (answered) return;
+
+  var target = document.getElementById('word-target');
+  var chips = target.querySelectorAll('.word-chip');
+  if (chips.length === 0) return;
+
   answered = true;
+  var userWords = [];
+  chips.forEach(function(chip) {
+    userWords.push(chip.innerText);
+  });
 
   var ex = currentList[index];
-  var userSentence = userOrder.join(' ').toLowerCase();
+  var userSentence = userWords.join(' ').toLowerCase();
 
   if (userSentence === ex.ans.toLowerCase()) {
+    target.style.background = '#dcfce7';
+    target.style.borderColor = '#22c55e';
     score += 10;
-    playDoraemonTheme(4000); // Suena 4 segundos de Doraemon
+    playDoraemonSound();
   } else {
+    target.style.background = '#fee2e2';
+    target.style.borderColor = '#ef4444';
     playWrongSound();
   }
   finishQuestion(ex.tip + " (Correcto: " + ex.ans + ")");
@@ -416,7 +444,6 @@ function finishQuestion(tipText) {
 }
 
 function nextQ() {
-  doraemonSong.pause(); // Detener música al pasar a la siguiente pregunta
   index++;
   if (index < currentList.length) {
     showQuestion();
@@ -424,9 +451,7 @@ function nextQ() {
     var maxScore = currentList.length * 10;
     var isPleno = (score === maxScore);
 
-    if (isPleno) {
-      playDoraemonTheme(0); // Suena la canción entera en el pleno
-    }
+    if (isPleno) playVictoryFanfare();
 
     document.getElementById('quiz').innerHTML = 
       '<div style="text-align:center; padding: 20px;">' +
