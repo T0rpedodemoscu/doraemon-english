@@ -7,20 +7,21 @@
   <style>
     body {
       background: #0284c7;
-      font-family: sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       margin: 0;
       padding: 15px;
+      box-sizing: border-box;
     }
     .card {
       background: white;
       border-radius: 20px;
       padding: 20px;
       width: 100%;
-      max-width: 450px;
+      max-width: 460px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
     .top-bar {
@@ -52,6 +53,7 @@
       padding: 15px;
       border-radius: 12px;
       margin-bottom: 15px;
+      color: #0f172a;
     }
     .options {
       display: flex;
@@ -67,6 +69,7 @@
       font-weight: bold;
       cursor: pointer;
       text-align: left;
+      color: #1e293b;
     }
     .btn.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; }
     .btn.incorrect { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
@@ -77,6 +80,8 @@
       border-left: 4px solid #22c55e;
       font-size: 13px;
       display: none;
+      color: #166534;
+      line-height: 1.4;
     }
     .next-btn {
       margin-top: 15px;
@@ -98,12 +103,12 @@
 <div class="card" id="quiz">
   <div class="top-bar">
     <span>🏆 Dorayakis: <span id="score">0</span></span>
-    <span>Frase: <span id="num">1</span>/<span id="total">0</span></span>
+    <span>Frase: <span id="num">1</span>/<span id="total">10</span></span>
   </div>
 
-  <div class="dialogue-box" id="dialogue">🐱 Doraemon: Cargar preguntas...</div>
+  <div class="dialogue-box" id="dialogue">🐱 Doraemon: ¡Preparando el entrenamiento!</div>
 
-  <div class="question" id="q-text">Cargando preguntas desde el archivo...</div>
+  <div class="question" id="q-text">Cargando frase...</div>
 
   <div class="options" id="opts"></div>
 
@@ -113,27 +118,101 @@
 </div>
 
 <script>
+// Banco de datos para crear cientos de combinaciones
+var subjects = [
+  { name: "Nobita", aux: "is", char: "🤓 Nobita" },
+  { name: "Doraemon", aux: "is", char: "🐱 Doraemon" },
+  { name: "Shizuka", aux: "is", char: "👧 Shizuka" },
+  { name: "Suneo", aux: "is", char: "🦊 Suneo" },
+  { name: "Gigante", aux: "is", char: "🎤 Gigante" },
+  { name: "Dorami", aux: "is", char: "🎀 Dorami" },
+  { name: "I", aux: "am", char: "🐱 Doraemon" },
+  { name: "We", aux: "are", char: "👧 Shizuka" },
+  { name: "You", aux: "are", char: "🦊 Suneo" },
+  { name: "The students", aux: "are", char: "🤓 Nobita" },
+  { name: "My friends", aux: "are", char: "👧 Shizuka" },
+  { name: "The cat", aux: "is", char: "🐱 Doraemon" }
+];
+
+var verbs = [
+  { base: "eat", ing: "eating", type: "reg", obj: "a delicious dorayaki 🍩" },
+  { base: "read", ing: "reading", type: "reg", obj: "a manga comic 📚" },
+  { base: "play", ing: "playing", type: "reg", obj: "video games 🎮" },
+  { base: "listen to", ing: "listening to", type: "reg", obj: "music 🎧" },
+  { base: "watch", ing: "watching", type: "reg", obj: "TV 📺" },
+  { base: "fly", ing: "flying", type: "reg", obj: "with the bamboo-copter 🚁" },
+  { base: "dance", ing: "dancing", type: "e_drop", obj: "at the school party 💃" },
+  { base: "write", ing: "writing", type: "e_drop", obj: "English homework 📝" },
+  { base: "make", ing: "making", type: "e_drop", obj: "a new gadget 🤖" },
+  { base: "swim", ing: "swimming", type: "double", obj: "in the river 🏊" },
+  { base: "run", ing: "running", type: "double", obj: "from a dog 🏃" },
+  { base: "sit", ing: "sitting", type: "double", obj: "on the sofa 🛋️" }
+];
+
+var times = ["right now", "at the moment", "today", "Look!", "Listen!"];
+
 var questions = [];
 var index = 0;
 var score = 0;
 var answered = false;
 
-// Cargar preguntas desde el archivo preguntas.json
-fetch('preguntas.json')
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(data) {
-    questions = data;
-    document.getElementById('total').innerText = questions.length;
-    showQuestion();
-  })
-  .catch(function(error) {
-    document.getElementById('q-text').innerText = '⚠️ Abre este archivo usando un servidor local (Live Server) o subiéndolo a internet para poder leer preguntas.json.';
-  });
+// Función para generar y mezclar un paquete de preguntas totalmente aleatorio
+function generateRandomQuestions() {
+  var generated = [];
+  
+  for (var s = 0; s < subjects.length; s++) {
+    for (var v = 0; v < verbs.length; v++) {
+      for (var t = 0; t < times.length; t++) {
+        var subj = subjects[s];
+        var verb = verbs[v];
+        var time = times[t];
+        var isLook = (time === "Look!" || time === "Listen!");
+
+        var sentence = isLook 
+          ? time + " " + subj.name + " ___ (" + verb.base + ") " + verb.obj + "."
+          : subj.name + " ___ (" + verb.base + ") " + verb.obj + " " + time + ".";
+
+        var correctOpt = subj.aux + " " + verb.ing;
+        var wrong1 = (subj.aux === "is") ? "are " + verb.ing : "is " + verb.ing;
+        var wrong2 = subj.aux + " " + verb.base;
+        if (verb.type === "double" || verb.type === "e_drop") {
+          wrong2 = subj.aux + " " + verb.base + "ing"; // Error típico como 'danceing' o 'swiming'
+        }
+
+        var opts = [correctOpt, wrong1, wrong2];
+        opts.sort(function() { return Math.random() - 0.5; }); // Mezclar las opciones A, B, C
+
+        var tip = "💡 Usamos '" + subj.aux + "' para '" + subj.name + "' + verbo en -ing.";
+        if (verb.type === "e_drop") tip += " Los verbos en -e la pierden (" + verb.ing + ").";
+        if (verb.type === "double") tip += " Doblamos la última consonante (" + verb.ing + ").";
+
+        generated.push({
+          q: sentence,
+          opts: opts,
+          correct: opts.indexOf(correctOpt),
+          tip: tip,
+          char: subj.char
+        });
+      }
+    }
+  }
+
+  // Mezclar todas las preguntas posibles al azar
+  generated.sort(function() { return Math.random() - 0.5; });
+  
+  // Tomamos una ronda de 15 preguntas distintas para cada partida
+  return generated.slice(0, 15);
+}
+
+function startQuiz() {
+  questions = generateRandomQuestions();
+  index = 0;
+  score = 0;
+  document.getElementById('total').innerText = questions.length;
+  showQuestion();
+}
 
 function showQuestion() {
-  if (questions.length === 0) return;
   answered = false;
   var q = questions[index];
   
@@ -190,12 +269,15 @@ function nextQ() {
   } else {
     document.getElementById('quiz').innerHTML = 
       '<div style="text-align:center;">' +
-      '<h2>🏆 ¡Has terminado todas las frases!</h2>' +
-      '<p style="margin: 15px 0; font-size:18px;">Conseguiste <b>' + score + '</b> Dorayakis.</p>' +
-      '<button class="next-btn" style="display:block" onclick="location.reload()">🔄 Jugar otra vez</button>' +
+      '<h2>🏆 ¡Ronda completada!</h2>' +
+      '<p style="margin: 15px 0; font-size:18px;">Has conseguido <b>' + score + '</b> Dorayakis.</p>' +
+      '<button class="next-btn" style="display:block" onclick="location.reload()">🔄 Jugar otra ronda (Nuevas Frases)</button>' +
       '</div>';
   }
 }
+
+// Iniciar partida
+startQuiz();
 </script>
 
 </body>
