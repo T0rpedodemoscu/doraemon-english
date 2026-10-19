@@ -176,15 +176,13 @@
 </div>
 
 <script>
-// --- MOTOR DE SONIDO SINTETIZADO (ESTILO MARIO BROS BGM & SFX) ---
+// --- SINTETIZADOR DE AUDIO PUNTUAL ---
 var audioCtx = null;
-var musicInterval = null;
 var isMuted = false;
 
 function initAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    startMarioBgm();
   }
 }
 
@@ -193,51 +191,45 @@ function toggleMusic() {
   document.getElementById('music-toggle').innerText = isMuted ? '🔇' : '🔊';
 }
 
-function playNote(freq, duration, type) {
+function playNote(freq, duration, type, delay) {
   if (isMuted || !audioCtx) return;
-  try {
-    var osc = audioCtx.createOscillator();
-    var gain = audioCtx.createGain();
-    osc.type = type || 'square';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-  } catch(e){}
-}
-
-function startMarioBgm() {
-  // Melodía tipo Super Mario en bucle 8-bits
-  var notes = [
-    659, 659, 0, 659, 0, 523, 659, 0, 783, 0, 0, 0, 392, 0, 0, 0,
-    523, 0, 0, 392, 0, 0, 330, 0, 0, 440, 0, 493, 0, 466, 0, 440
-  ];
-  var noteIdx = 0;
-  musicInterval = setInterval(function() {
-    if (notes[noteIdx] > 0) {
-      playNote(notes[noteIdx], 0.12, 'square');
-    }
-    noteIdx = (noteIdx + 1) % notes.length;
-  }, 150);
+  delay = delay || 0;
+  setTimeout(function() {
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'square';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e){}
+  }, delay);
 }
 
 function playSFX(type) {
+  initAudio();
   if (isMuted || !audioCtx) return;
+
   if (type === 'correct') {
-    playNote(523, 0.1, 'triangle');
-    setTimeout(function(){ playNote(659, 0.1, 'triangle'); }, 100);
-    setTimeout(function(){ playNote(783, 0.15, 'triangle'); }, 200);
+    // Frase musical alegre estilo Mario al acertar
+    var notes = [523, 659, 783, 1046, 783, 1046];
+    var times = [0, 100, 200, 300, 450, 600];
+    notes.forEach(function(freq, i) {
+      playNote(freq, 0.15, 'triangle', times[i]);
+    });
   } else if (type === 'wrong') {
-    playNote(200, 0.2, 'sawtooth');
-    setTimeout(function(){ playNote(150, 0.25, 'sawtooth'); }, 150);
+    // Sonido suave de fallo
+    playNote(220, 0.15, 'sawtooth', 0);
+    playNote(164, 0.25, 'sawtooth', 120);
   } else if (type === 'victory') {
-    // Fanfarria de Victoria
-    var winNotes = [523, 659, 783, 1046, 0, 783, 1046];
+    // Música triunfal de fin de ronda
+    var winNotes = [523, 659, 783, 1046, 0, 783, 1046, 1318];
     winNotes.forEach(function(f, i){
-      if(f > 0) setTimeout(function(){ playNote(f, 0.2, 'triangle'); }, i * 150);
+      if (f > 0) playNote(f, 0.25, 'triangle', i * 140);
     });
   }
 }
@@ -350,7 +342,6 @@ function showQuestion() {
 
 function toggleWord(chip, word) {
   if (answered) return;
-  initAudio();
   var target = document.getElementById('word-target');
   var pool = document.getElementById('word-pool');
 
@@ -367,7 +358,6 @@ function toggleWord(chip, word) {
 function checkChoice(selected) {
   if (answered) return;
   answered = true;
-  initAudio();
 
   var ex = currentList[index];
   var btns = document.querySelectorAll('.btn');
@@ -386,7 +376,6 @@ function checkChoice(selected) {
 
 function checkFill() {
   if (answered) return;
-  initAudio();
 
   var val = document.getElementById('text-ans').value.trim().toLowerCase();
   if (!val) return;
@@ -410,7 +399,6 @@ function checkFill() {
 
 function checkOrder() {
   if (answered) return;
-  initAudio();
   answered = true;
 
   var ex = currentList[index];
